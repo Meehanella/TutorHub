@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tutor Hub - Multi-Role Registry</title>
+    <style>
+        :root { 
+            --primary: #800020; /* Maroon */
+            --primary-hover: #5a0017; 
+            --bg: #fdf8f8; 
+            --card-bg: #ffffff; 
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: #1f2937; }
+        .navbar { background: var(--primary); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+        .container { max-width: 700px; margin: 40px auto; padding: 0 20px; }
+        .card { background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(128, 0, 32, 0.08); margin-bottom: 20px; border: 1px solid #f3e8e8; }
+        .tab-btn { background: none; border: none; color: #6b7280; font-size: 16px; padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; font-weight: 600; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        button:hover { background: var(--primary-hover); }
+        .btn-secondary { background: #6b7280; }
+        .btn-danger { background: #ef4444; }
+        .btn-success { background: #10b981; }
+        .hidden { display: none; }
+        
+        .user-card { display: flex; align-items: center; gap: 15px; background: #fffcfc; border: 1px solid #f3e8e8; padding: 15px; border-radius: 8px; margin-top: 12px; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; background: #fce8e8; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; flex-shrink: 0; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block; }
+        .avail { background: #d1fae5; color: #065f46; }
+        .busy { background: #fee2e2; color: #991b1b; }
+        .contact-info { font-size: 13px; color: #4b5563; margin-top: 4px; }
+        .student-box { background: #fff8f8; border: 1px dashed var(--primary); padding: 12px; border-radius: 6px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h2 style="margin: 0;">🎓 TutorHub</h2>
+        <span id="navUser" style="font-size: 14px;"></span>
+    </div>
+
+    <div class="container">
+        
+        <!-- AUTHENTICATION CARD -->
+        <div id="authCard" class="card">
+            <div style="display: flex; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px;">
+                <button id="loginTab" class="tab-btn active" onclick="switchTab('login')">Sign In</button>
+                <button id="registerTab" class="tab-btn" onclick="switchTab('register')">Create Account</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <div id="loginForm">
+                <input id="loginUser" placeholder="Username">
+                <input id="loginPass" type="password" placeholder="Password">
+                <button onclick="login()">Log In</button>
+            </div>
+
+            <!-- REGISTER FORM -->
+            <div id="registerForm" class="hidden">
+                <select id="regRole" onchange="toggleRoleFields()">
+                    <option value="STUDENT">Register as Student</option>
+                    <option value="TUTOR">Register as Tutor</option>
+                </select>
+                <input id="regName" placeholder="Full Name">
+                <input id="regEmail" type="email" placeholder="Email Address">
+                <input id="regPhone" placeholder="Phone Number (e.g., 0917-xxx-xxxx)">
+                <input id="regUser" placeholder="Choose Username">
+                <input id="regPass" type="password" placeholder="Choose Password">
+                
+                <div id="tutorFields" class="hidden">
+                    <input id="regSubject" placeholder="Subject Specialization">
+                    <input id="regRate" type="number" placeholder="Hourly Rate (₱)">
+                </div>
+                
+                <div id="studentFields">
+                    <input id="regGrade" placeholder="Year / Grade Level">
+                </div>
+
+                <button class="btn-success" onclick="register()">Register Account</button>
+            </div>
+        </div>
+
+        <!-- MAIN DASHBOARD -->
+        <div id="dashboard" class="card hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="welcomeText" style="margin: 0;">Welcome</h2>
+                <button onclick="location.reload()" class="btn-secondary" style="width: auto; padding: 6px 16px;">Logout</button>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 15px 0;">
+
+            <!-- STUDENT VIEW -->
+            <div id="studentView" class="hidden">
+                <h3>Available Tutors & Profiles</h3>
+                <div id="tutorDirectory"></div>
+            </div>
+
+            <!-- TUTOR VIEW -->
+            <div id="tutorView" class="hidden">
+                <h3>Manage Profile & Availability</h3>
+                <input id="editSubject" placeholder="Subject Taught">
+                <input id="editRate" type="number" placeholder="Hourly Rate (₱)">
+                <label style="display: block; margin: 10px 0; font-size: 14px;">
+                    <input type="checkbox" id="editAvail" style="width: auto;"> Available for Bookings
+                </label>
+                <button onclick="updateTutorProfile()">Save Profile Updates</button>
+
+                <div id="assignedStudentCard" class="student-box hidden">
+                    <h4 style="margin:0 0 8px 0; color: var(--primary);">📌 Current Student Details</h4>
+                    <div id="studentDetailText" style="font-size: 14px; line-height: 1.5;"></div>
+                </div>
+            </div>
+
+            <!-- ADMIN VIEW -->
+            <div id="adminView" class="hidden">
+                <h3>System Accounts Overview</h3>
+                <div id="allUsersList"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        function switchTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+                document.getElementById('loginTab').classList.add('active');
+                document.getElementById('registerTab').classList.remove('active');
+            } else {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+                document.getElementById('loginTab').classList.remove('active');
+                document.getElementById('registerTab').classList.add('active');
+            }
+        }
+
+        function toggleRoleFields() {
+            const role = document.getElementById('regRole').value;
+            if (role === 'TUTOR') {
+                document.getElementById('tutorFields').classList.remove('hidden');
+                document.getElementById('studentFields').classList.add('hidden');
+            } else {
+                document.getElementById('tutorFields').classList.add('hidden');
+                document.getElementById('studentFields').classList.remove('hidden');
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPass').value;
+
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                currentUser = data.user;
+                setupDashboard();
+            } else {
+                alert('Invalid Username or Password');
+            }
+        }
+
+        async function register() {
+            const payload = {
+                role: document.getElementById('regRole').value,
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                phone: document.getElementById('regPhone').value,
+                username: document.getElementById('regUser').value,
+                password: document.getElementById('regPass').value,
+                subject: document.getElementById('regSubject').value,
+                rate: document.getElementById('regRate').value,
+                grade: document.getElementById('regGrade').value
+            };
+
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                alert('Account created! Please sign in.');
+                switchTab('login');
+            } else if (data.status === 'exists') {
+                alert('Username is already taken.');
+            }
+        }
+
+        function setupDashboard() {
+            document.getElementById('authCard').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('welcomeText').innerText = `Welcome, ${currentUser.name}`;
+            document.getElementById('navUser').innerText = `${currentUser.name} (${currentUser.role})`;
+
+            if (currentUser.role === 'STUDENT') {
+                document.getElementById('studentView').classList.remove('hidden');
+                loadTutors();
+            } else if (currentUser.role === 'TUTOR') {
+                document.getElementById('tutorView').classList.remove('hidden');
+                document.getElementById('editSubject').value = currentUser.subject;
+                document.getElementById('editRate').value = currentUser.rate;
+                document.getElementById('editAvail').checked = currentUser.available;
+                
+                checkTutorStudent();
+            } else if (currentUser.role === 'ADMIN') {
+                document.getElementById('adminView').classList.remove('hidden');
+                loadAllUsers();
+            }
+        }
+
+        function checkTutorStudent() {
+            const card = document.getElementById('assignedStudentCard');
+            const details = document.getElementById('studentDetailText');
+            
+            if (currentUser.studentName && currentUser.studentName.trim() !== "") {
+                card.classList.remove('hidden');
+                details.innerHTML = `
+                    <b>Name:</b> ${currentUser.studentName}<br>
+                    <b>Email:</b> ${currentUser.studentEmail}<br>
+                    <b>Phone:</b> ${currentUser.studentPhone}
+                `;
+            } else {
+                card.classList.add('hidden');
+            }
+        }
+
+        async function loadTutors() {
+            const res = await fetch('/api/users');
+            const users = await res.json();
+            const container = document.getElementById('tutorDirectory');
+            container.innerHTML = '';
+
+            users.filter(u => u.role === 'TUTOR').forEach(t => {
+                const statusBadge = t.available 
+                    ? `<span class="badge avail">Available</span>`
+                    : `<span class="badge busy">Busy</span>`;
+
+                const actionBtn = t.available 
+                    ? `<button class="btn-success" style="width:auto; margin:0;" onclick="bookTutor('${t.username}')">Avail Tutor</button>`
+                    : '';
+
+                container.innerHTML += `
+                    <div class="user-card">
+                        <div class="avatar">${t.name.charAt(0)}</div>
+                        <div style="flex-grow: 1;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <b>${t.name}</b> ${statusBadge}
+                            </div>
+                            <div style="font-size:14px; margin-top:2px;">Specialization: ${t.subject} (₱${t.rate}/hr)</div>
+                            <div class="contact-info">📧 ${t.email} | 📞 ${t.phone}</div>
+                        </div>
+                        ${actionBtn}
+                    </div>
+                `;
+            });
+        }
+
+        async function bookTutor(username) {
+            await fetch('/api/tutor/action', {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'book', 
+                    username: username,
+                    studentUsername: currentUser.username
+                })
+            });
+            alert('Tutor booked successfully! They can now view your contact details.');
+            loadTutors();
+        }
+
+        async function updateTutorProfile() {
+            const subject = document.getElementById('editSubject').value;
+            const rate = document.getElementById('editRate').value;
+            const available = document.getElementById('editAvail').checked;
+
+            await fetch('/api/tutor/action', {
+                method: 'POST',
+                body: JSON.stringify({ action: 'update', username: currentUser.username, subject, rate, available })
+            });
+            alert('Profile updated!');
+        }
+
+        async function loadAllUsers() {
+            const res = await fetch('/api/users');
+            const users = await res.json();
+            const container = document.getElementById('allUsersList');
+            container.innerHTML = '';
+
+            users.forEach(u => {
+                const deleteBtn = u.role !== 'ADMIN' 
+                    ? `<button class="btn-danger" style="width:auto; margin:0;" onclick="deleteUser('${u.username}')">Delete</button>` 
+                    : '';
+
+                container.innerHTML += `
+                    <div class="user-card">
+                        <div class="avatar">${u.name.charAt(0)}</div>
+                        <div style="flex-grow: 1;">
+                            <b>${u.name}</b> (@${u.username}) - <span class="badge" style="background:#f3e8e8;">${u.role}</span>
+                            <div class="contact-info">📧 ${u.email} | 📞 ${u.phone}</div>
+                        </div>
+                        ${deleteBtn}
+                    </div>
+                `;
+            });
+        }
+
+        async function deleteUser(username) {
+            await fetch('/api/users', {
+                method: 'POST',
+                body: JSON.stringify({ action: 'delete', username })
+            });
+            loadAllUsers();
+        }
+    </script>
+</body>
+</html>
