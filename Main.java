@@ -224,7 +224,7 @@ public class Main {
 
     private static void sendJsonResponse(HttpExchange exchange, String json) throws IOException {
         byte[] response = json.getBytes();
-        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8"");
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.sendResponseHeaders(200, response.length);
         OutputStream os = exchange.getResponseBody();
         os.write(response);
