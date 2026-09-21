@@ -105,7 +105,7 @@ public class Main {
 
         server.createContext("/", exchange -> {
             byte[] response = Files.readAllBytes(Paths.get("index.html"));
-            exchange.getResponseHeaders().set("Content-Type", "text/html");
+            exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
             exchange.sendResponseHeaders(200, response.length);
             OutputStream os = exchange.getResponseBody();
             os.write(response);
@@ -224,7 +224,7 @@ public class Main {
 
     private static void sendJsonResponse(HttpExchange exchange, String json) throws IOException {
         byte[] response = json.getBytes();
-        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8"");
         exchange.sendResponseHeaders(200, response.length);
         OutputStream os = exchange.getResponseBody();
         os.write(response);
